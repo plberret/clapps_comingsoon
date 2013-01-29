@@ -1,0 +1,21 @@
+
+/* -------------------------------- Fix ie -----------------------------------*/
+
+#desinscription form input[type=submit] {
+	width: 230px;
+}
+
+html {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+#container {
+	position: static;
+}
+
+input[type=submit], input[type=submit]:active, input[type=submit]:focus, input[type=submit]:hover {
+	color: black !important; 
+	text-shadow: 0 !important;
+	
+}
