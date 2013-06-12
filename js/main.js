@@ -1,385 +1,378 @@
 
-// requestAnim shim layer by Paul Irish
-	var lastTime = 0;
-    var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame = 
-          window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
-    }
- 
-    if (!window.requestAnimationFrame)
-        window.requestAnimationFrame = function(callback, element) {
-            var currTime = new Date().getTime();
-            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
-              timeToCall);
-            lastTime = currTime + timeToCall;
-            return id;
-        };
- 
-    if (!window.cancelAnimationFrame)
-        window.cancelAnimationFrame = function(id) {
-            clearTimeout(id);
-        };
-
-/* FUNCTIONS
---------------------------------------------------------------------------------------------------------------------------------------*/
-
 var zf = zf || {};
 
+/* ANIMATION FRAME
+--------------------------------------------------------------------------------------------------------------------------------------*/
 
-zf.displayIntro = function(){
+var lastTime = 0;
+var vendors = ['ms', 'moz', 'webkit', 'o'];
+for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+	window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+	window.cancelAnimationFrame = 
+	window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+}
+
+if (!window.requestAnimationFrame)
+window.requestAnimationFrame = function(callback, element) {
+	var currTime = new Date().getTime();
+	var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+	var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
+	timeToCall);
+	lastTime = currTime + timeToCall;
+	return id;
+};
+
+if (!window.cancelAnimationFrame)
+window.cancelAnimationFrame = function(id) {
+	clearTimeout(id);
+};
+
+/* ANIMATION INTRO
+--------------------------------------------------------------------------------------------------------------------------------------*/
+
+zf.initDisplay = function(){
 	
 	// init
 	zf.$isUpdate=false;
+	zf.initAnimation();
+	
+	// url direct: about, mentions, confirmation subscribe, update, unsubscribe, profil ciblé
+	// a = animation 
+	// f = firstname
+	// l = lastname
+	// j = job 
+	// e = email 
+	// p = provenance 
+	// m = method 
+	// c = ciblage adword 
+	// desinscription : 76639, confirmation inscription : 92038, update profil : 92039
+	// ex: ?a=false&m=92038&e=pl.berret@gmail.com&f=pl&l=&j=test&p=test
+	// ?a=false&m=92038&e='pl.berret@gmail.com'&f='pl'&l=''&j='test'&p='test'
+	
+	// detecte ie 7&8
+	if ( $.browser.msie ) {
+		$ie=parseInt($.browser.version, 10); 
+		if($ie<=9){
+			if($ie<9){
+				zf.displayContent();
+				return false; 
+			}
+		}
+	}
+
+	// animation  
+	if(zf.param_anim==false){
+		zf.displayContent();
+	}else{
+		$('#animLogo').show();
+		zf.startAnimLogo(function() {
+			$('#animLogo #canvas').fadeOut(600); 
+			setTimeout(function(){
+				zf.displayContent();
+				$('#animLogo').fadeOut(300); 
+			},700);
+		});
+	}
+	
+	// provenance adwords
+	zf.$fieldJob = zf.$page.find('#first_part #intro h2 strong');
+	$.getJSON('js/jobs.json', function(data) {
+		if(zf.param_adword==null){
+			// get jobs
+			zf.jobs = [];
+			$.each(data.jobs, function(key, val) {
+				for(var i=0;i<val.priority;i++){
+					zf.jobs.push(val.name);
+				}
+			});
+			zf.$fieldJob.html(zf.jobs[0]);
+			zf.changeJob();
+		}else{
+			zf.$fieldJob.html(data.jobs[zf.param_adword].name);
+		}
+	});
 	
 	// completer les infos d'une inscription externe
-	if((zf.$getEmail!=null)&&(zf.isValidEmail(zf.$getEmail))&&(zf.$getType==92038)){
-		zf.$isUpdate=true;
+	if((zf.isValidEmail(zf.param_email))&&(zf.param_method==92038)){
 		$.fancybox.open({
-			href: './popin/confirmSubscribe.php',
-			type: 'ajax',
+			href: './popin/confirmSubscribe.php?p='+zf.param_provenance+'&e='+zf.param_email+'&f='+zf.param_fn+'&l='+zf.param_ln+'&j='+zf.param_job,
+			type: 'iframe',
 			closeClick  : false,
 			helpers   : { 
 				overlay : {closeClick: false}
-			},
-			afterShow: zf.initNewsletter
+			}
+		//	afterShow: zf.initNewsletter
 		});
-		zf.displaySansAnim(); 
-		_gaq.push(['_trackPageview', '/modification-fromFB']);
+		//_gaq.push(['_trackPageview', '/modification-fromFB']);
 		return false;
 	}
 	
 	// affichage du message d'update
-	if((zf.$getEmail!=null)&&(zf.isValidEmail(zf.$getEmail))&&(zf.$getType==92039)){
-		zf.$isUpdate=true;
+	if((zf.isValidEmail(zf.param_email))&&(zf.param_method==92039)){
 		$.fancybox.open({
-			href: './popin/updateSubscribe.php',
-			type: 'ajax',
+			href: './popin/updateSubscribe.php?p='+zf.param_provenance+'&e='+zf.param_email+'&f='+zf.param_fn+'&l='+zf.param_ln+'&j='+zf.param_job,
+			type: 'iframe',
 			closeClick  : false,
 			helpers   : { 
 				overlay : {closeClick: false}
-			},
-			afterShow: zf.initNewsletter
+			}
+		//	afterShow: zf.initNewsletter
 		});
-		zf.displaySansAnim(); 
-		_gaq.push(['_trackPageview', '/modification']);
+		//_gaq.push(['_trackPageview', '/modification']);
 		return false;
 	}
 	
 	// affichage du message de desinscription
-	if((zf.$getEmail!=null)&&(zf.isValidEmail(zf.$getEmail))&&(zf.$getType==76639)){
+	if((zf.isValidEmail(zf.param_email))&&(zf.param_method==76639)){
 		$.fancybox.open({
-			href: './popin/confirmUnsubscribe.php',
-			type: 'ajax',
+			href: './popin/confirmUnsubscribe.php?e='+zf.param_email,
+			type: 'iframe',
 			closeClick  : false,
 			helpers   : { 
 				overlay : {closeClick: false}
-			},
-			afterShow: zf.initNewsletter
-		});
-		zf.displaySansAnim(); 
-		_gaq.push(['_trackPageview', '/desinscription']);
-		return false;
-	}
-	
-	// affichage des mentions légales
-	if(zf.$getType==72919){
-		$.fancybox.open({
-			href: './popin/mentions.php',
-			type: 'ajax'
-		});
-		zf.displaySansAnim(); 
-		_gaq.push(['_trackPageview', '/mentions']);
-		return false;
-	}
-	
-	// affichage de la page de contact
-	if(zf.$getType==54974){
-		$.fancybox.open({
-			href: './popin/contact.php',
-			type: 'ajax',
-			afterShow: zf.initContact
-		});
-		zf.displaySansAnim(); 
-		_gaq.push(['_trackPageview', '/contact']);
-		return false;
-	}
-	
-	// detecte ie 7&8
-	if ( $.browser.msie ) {
-		$ie=parseInt($.browser.version, 10); 
-		if($ie<=9){
-			zf.fixPlaceholder(); 
-			if($ie<9){
-				zf.displayShortAnim();
-				return; 
 			}
-		}
+		//	afterShow: zf.initNewsletter
+		});
+	//	_gaq.push(['_trackPageview', '/desinscription']);
+		return false;
 	}
-	
-	// on affiche mais cache le bandeau que l'on va animer, et on affiche le logo
-	$('#animBandeau').show();
-	$('#bg').show(); 
-	$('#fond').css({'opacity': 1}).show(); 
-	zf.resize(); 
-	$('#animLogo').show();
-	
-	// animation du logo, puis transition et lancement de l'anim des bandeaux
-	zf.startAnimLogo(function() {
-		$('#animLogo #canvas').fadeOut(600,function() {
-			$('#animLogo').fadeOut(500); 
-		}); 
-		setTimeout(zf.startAnimBandeau,1200);
-	});
-	
-	// gestion du fond selon resize
-	$(window).resize(function(){ 
-		zf.resize();
- 	});
 	
 };
-zf.startAnimLogo = function(callback) {
-	// Canvas
-	zf.$animLogo = 	zf.$body.find('#animLogo #canvas');
-	zf.$cache = 	zf.$body.find('#animLogo #cache');
-	zf.canvas = document.getElementById('canvasLogo');
-	zf.context = zf.canvas.getContext('2d');
-	zf.buffer = document.createElement('canvas');
-	zf.ctx = zf.buffer.getContext('2d');
 
-	zf.buffer.width = zf.canvas.width;
-	zf.buffer.height = zf.canvas.height;
-	zf.$animLogo.append(zf.buffer);
-	var top = (document.documentElement.offsetHeight-zf.buffer.height)/2-30;
-	zf.$animLogo.css({top:top})
-	top+=220;
-	zf.$cache.css({top:top})
-
-	// Add logo to canvas
-	zf.logoTop = new Image();
-	zf.logoBottom = new Image();
-	zf.logoTop.src = 'images/top_logo.png'
-	zf.logoBottom.src = 'images/bottom_logo.png'
-	zf.leftLogos = 30;
-	zf.topLogoB = 272;
-	zf.topLogoT = 236;
-	// zf.logoBottom.onload = function() {
-		zf.context.drawImage(zf.logoBottom,zf.leftLogos,zf.topLogoB);
-	// };
-
-	// Start anim
-	zf.angle = 0; //init angle
-
-	if(callback){
-		zf.callback = callback;
-	}
+zf.initAnimation = function() {
 	
-	// zf.logoTop.onload = function() {
+	zf.startAnimLogo = function(callback) {
+		// Canvas
+		zf.$animLogo = 	zf.$body.find('#animLogo #canvas');
+		zf.$cache = 	zf.$body.find('#animLogo #cache');
+		zf.canvas = document.getElementById('canvasLogo');
+		zf.context = zf.canvas.getContext('2d');
+		zf.buffer = document.createElement('canvas');
+		zf.ctx = zf.buffer.getContext('2d');
+
+		zf.buffer.width = zf.canvas.width;
+		zf.buffer.height = zf.canvas.height;
+		zf.$animLogo.append(zf.buffer);
+		var top = (document.documentElement.offsetHeight-zf.buffer.height)/2-30;
+		zf.$animLogo.css({top:top})
+		top+=220;
+		zf.$cache.css({top:top})
+
+		// Add logo to canvas
+		zf.logoTop = new Image();
+		zf.logoBottom = new Image();
+		zf.logoTop.src = 'images/top_logo.png'
+		zf.logoBottom.src = 'images/bottom_logo.png'
+		zf.leftLogos = 30;
+		zf.topLogoB = 272;
+		zf.topLogoT = 236;
+		zf.context.drawImage(zf.logoBottom,zf.leftLogos,zf.topLogoB);
+
+		// Start anim
+		zf.angle = 0; //init angle
+
+		if(callback){
+			zf.callback = callback;
+		}
+
 		zf.ctx.drawImage(zf.logoTop,zf.leftLogos,zf.topLogoT);
 		zf.firstTop = parseInt(zf.$animLogo.css('top'));
 		zf.TTop = parseInt(zf.$animLogo.css('top'));
 		zf.animRate = 0;
-	// };
-	
 		zf.launchAnim();
+	};
 	
-};
-
-Math.easeOutQuad = function (t, b, c, d) {
-	t /= d;
-	return -c * t*(t-2) + b;
-};
-
-zf.launchAnim = function() {
-	zf.rAFLaunchAnim = requestAnimationFrame(zf.launchAnim);
-	var animRate = Math.easeOutQuad(zf.animRate,5,2,1000);
-	if (animRate>0) {
-		zf.TTop-=animRate;
-		zf.topLogoT-=animRate;
-		zf.topLogoB-=animRate;
-		zf.animRate-=20;
+	zf.launchAnim = function() {
+		zf.rAFLaunchAnim = requestAnimationFrame(zf.launchAnim);
+		var animRate = Math.easeOutQuad(zf.animRate,5,2,1000);
+		if (animRate>0) {
+			zf.TTop-=animRate;
+			zf.topLogoT-=animRate;
+			zf.topLogoB-=animRate;
+			zf.animRate-=20;
+			zf.ctx.save();
+			zf.ctx.clearRect(0,0,zf.buffer.width,zf.buffer.height)
+			zf.context.clearRect(0,0,zf.buffer.width,zf.buffer.height)
+			zf.ctx.drawImage(zf.logoTop,zf.leftLogos,zf.topLogoT);
+			zf.context.drawImage(zf.logoBottom,zf.leftLogos,zf.topLogoB);
+			zf.ctx.restore();
+		} else {
+			cancelAnimationFrame(zf.rAFLaunchAnim);
+			zf.animateOne();
+		}
+	};
+	
+	zf.animateOne = function() {
+		zf.rAF = requestAnimationFrame(zf.animateOne);
+		zf.animationLogoOne();
+		zf.angle-=6;
+	};
+	
+	zf.animationLogoOne = function() {
+		zf.anim();
+		if (zf.angle <= -36) {
+			cancelAnimationFrame(zf.rAF);
+			zf.animateTwo();
+		};
+	};
+	
+	zf.animateTwo = function() {
+		zf.rAF2 = requestAnimationFrame(zf.animateTwo);
+		zf.animationLogoTwo();
+		zf.angle+=4;
+	};
+	
+	zf.animationLogoTwo = function() {
+		zf.anim();
+		if (zf.angle > 1 ) {
+			cancelAnimationFrame(zf.rAF2);
+			zf.animateThree();
+		};
+	};
+	
+	zf.animateThree = function() {
+		zf.rAF3 = requestAnimationFrame(zf.animateThree);
+		zf.animationLogoThree();
+		zf.angle--;
+	};
+	
+	zf.animationLogoThree = function() {
+		zf.anim();
+		if (zf.angle < 1 ) {
+			cancelAnimationFrame(zf.rAF3);
+			zf.callback();
+		};
+	};
+	
+	zf.anim = function() {
 		zf.ctx.save();
 		zf.ctx.clearRect(0,0,zf.buffer.width,zf.buffer.height)
-		zf.context.clearRect(0,0,zf.buffer.width,zf.buffer.height)
-		zf.ctx.drawImage(zf.logoTop,zf.leftLogos,zf.topLogoT);
-		zf.context.drawImage(zf.logoBottom,zf.leftLogos,zf.topLogoB);
+		zf.ctx.translate( 30,zf.topLogoT+35);
+		zf.ctx.rotate( Math.PI*zf.angle/180);
+		zf.ctx.translate( 0, -35 );
+		zf.ctx.drawImage( zf.logoTop, 0, 0 );
 		zf.ctx.restore();
-	} else {
-		cancelAnimationFrame(zf.rAFLaunchAnim);
-		zf.animateOne();
+	};
+	
+	Math.easeOutQuad = function (t, b, c, d) {
+		t /= d;
+		return -c * t*(t-2) + b;
+	};
+	
+};
+
+
+/* OTHERS FUNCTIONS
+--------------------------------------------------------------------------------------------------------------------------------------*/
+
+zf.displayContent = function() {
+	zf.$page.show();
+	zf.$page.find('section').css({'min-height': $(window).height()});
+	zf.$page.find('section .slider').css({'min-height': $(window).height()-79});
+	zf.resizeSlider();
+	zf.responsiveHeader();
+	
+	$(window).resize(function(){
+		zf.$page.find('section').css({'min-height': $(window).height()});
+		zf.$page.find('section .slider').css({'min-height': $(window).height()-79});
+		zf.resizeSlider();
+		zf.responsiveHeader();
+ 	});
+	
+	zf.currentPart = '#first_part';
+	zf.navAnim = false;
+	
+	zf.displayTrame();
+	
+	$(window).scroll(function(){
+		
+		var scroll = $(this).scrollTop();
+		$first_part = $('#first_part').position().top;
+		$second_part = $('#second_part').position().top;
+		$third_part = $('#third_part').position().top;
+		var lastCurrentPart = zf.currentPart;
+		
+		if(scroll < ($second_part - 80)){
+			zf.currentPart = '#first_part';
+		}else if((scroll >= ($second_part - 80))&&(scroll < ($third_part - 80))){
+			zf.currentPart = '#second_part';
+		}else{
+			zf.currentPart = '#third_part';
+		}
+		
+		if((lastCurrentPart != zf.currentPart)&&(zf.navAnim==false)){
+			$('header nav').find('li.current').removeClass('current');
+			$('header nav li a').each(function(){
+				$this = $(this);
+				if($this.attr('href')==zf.currentPart){
+					$this.parent().addClass('current');
+				}
+			});
+		}
+		
+		// bandeau noir scroll 
+		if((scroll < 5)&&($(this).width() > 960)){
+			if(zf.$page.find('header').hasClass('top')){
+				zf.$page.find('header').removeClass('top');
+			}
+		}else{
+			if(!zf.$page.find('header').hasClass('top')){
+				zf.$page.find('header').addClass('top');
+			}
+		}
+		
+		if(zf.$page.find('#first_part .slider_frame').css('display')!="none"){
+			zf.$page.find('#first_part .slider_frame').hide(); 
+		}
+		
+	}); 
+	
+	// slider navigation
+	zf.startSlider();
+	zf.$page.on('click', '.slider .control a',function(event){
+		clearInterval(zf.animSlider);
+		index = $(this).parent().index();
+		$next = zf.$page.find('.slider .display').eq(index);
+		$next.css({'z-index': 5});
+		zf.$page.find('.slider .display.current').fadeOut(1200, function(){
+			$next.addClass('current').css({'z-index': 6});
+			$(this).removeClass('current').css({'z-index': 4}).show();
+		});
+		zf.$page.find('.slider .desc.current').fadeOut(1200, function(){
+			zf.$page.find('.slider .desc').eq(index).addClass('current').fadeIn(500);
+			$(this).removeClass('current');
+		});
+		zf.$page.find('.slider .control.current').removeClass('current');
+		$(this).parent().addClass('current');
+		zf.startSlider();
+	});
+
+};
+
+zf.responsiveHeader = function() {
+	// fix header < 960 
+	var width = $(window).width();
+	if((width < 960) && (zf.$page.find('header nav').css('margin-left') != "50px" )){
+		zf.$page.find('header nav').css({'margin-left': '50px'});
+		zf.$page.find('header').addClass('top');
+	}else if((width >= 960) && (zf.$page.find('header nav').css('margin-left') == "50px" )){
+		zf.$page.find('header nav').css({'margin-left': '40%'});
 	}
 };
 
-zf.anim = function() {
-	zf.ctx.save();
-	zf.ctx.clearRect(0,0,zf.buffer.width,zf.buffer.height)
-	zf.ctx.translate( 30,zf.topLogoT+35);
-	zf.ctx.rotate( Math.PI*zf.angle/180);
-	zf.ctx.translate( 0, -35 );
-	zf.ctx.drawImage( zf.logoTop, 0, 0 );
-	zf.ctx.restore();
-};
-
-zf.animationLogoOne = function() {
-	zf.anim();
-	if (zf.angle <= -36) {
-		cancelAnimationFrame(zf.rAF);
-		zf.animateTwo();
-	};
-};
-
-zf.animationLogoTwo = function() {
-	zf.anim();
-	if (zf.angle > 1 ) {
-		cancelAnimationFrame(zf.rAF2);
-		zf.animateThree();
-	};
-};
-
-zf.animationLogoThree = function() {
-	zf.anim();
-	if (zf.angle < 1 ) {
-		cancelAnimationFrame(zf.rAF3);
-		zf.callback();
-	};
-};
-
-zf.animateOne = function() {
-	zf.rAF = requestAnimationFrame(zf.animateOne);
-	zf.animationLogoOne();
-	zf.angle-=6;
-};
-
-zf.animateTwo = function() {
-	zf.rAF2 = requestAnimationFrame(zf.animateTwo);
-	zf.animationLogoTwo();
-	zf.angle+=4;
-};
-
-zf.animateThree = function() {
-	zf.rAF3 = requestAnimationFrame(zf.animateThree);
-	zf.animationLogoThree();
-	zf.angle--;
-};
-
-zf.startAnimBandeau = function() {
-	zf.$body.find('#bandeau_top').animate({'height':0},1000);
-	zf.$body.find('#bandeau_bottom').animate({'height':0},1000);
-	zf.$body.find('#fond').delay(1000).animate({'opacity':0},1500,function() {
-		zf.$body.find('#animBandeau').remove();
-		zf.$body.css({'overflow-y': 'auto', 'overflow-x': 'hidden'});
-	})
-	zf.$body.find('#container').show();
-};
-
-zf.displaySansAnim = function() {
-	zf.$page.css({display:'block',opacity:0}).delay(700).animate({opacity:0.9},800);
-	$('#animBandeau').show();
-	$('#animBandeau .bandeau').hide();
-	$('#container').show();
-	zf.$body.find('#fond').animate({'opacity':0},500,function() {
-		zf.$body.find('#animBandeau').remove();
-	})
-	setTimeout(function(){
-		zf.resize();
-	},500);
-	$('#bg').show();
-	zf.$body.css({'overflow-y': 'auto', 'overflow-x': 'hidden'});
-	// gestion du fond selon resize
-	$(window).resize(function(){ 
-		zf.resize();
-	});
-};
-
-zf.displayShortAnim = function() {
-	
-	// on affiche mais cache le bandeau que l'on va animer, et on affiche le logo
-	zf.$body.css({'overflow': 'hidden'});
-	$('#animBandeau').show();
-	$('#bg').show(); 
-	$('#fond').show(); 
-	zf.resize(); 
-	
-	zf.$body.find('#bandeau_top').animate({'height':0},1000);
-	zf.$body.find('#bandeau_bottom').animate({'height':0},1000);
-	zf.$body.find('#fond').delay(1000).animate({'opacity':0},1500,function() {
-		zf.$body.find('#container').show();
-		zf.$body.find('#animBandeau').remove();
-		zf.$body.css({'overflow-y': 'auto', 'overflow-x': 'hidden'});
-	});
-	
-	// gestion du fond selon resize
-	$(window).resize(function(){ 
-		zf.resize();
-	});
-};
-
-zf.initTweet = function() {
-	zf.slide = 0;
-	zf.left = 332;
-	zf.slideMax = 3;
-	zf.$tweetBlock = zf.$page.find('#twitter');
-	
-	zf.$tweetBlock.find('#twitter_nav .next').click(function(event) {
-		event.preventDefault();
-		if (zf.slide<zf.slideMax-1) {
-			zf.slide++;
-			$(this).siblings('.previous').addClass('no-first');
-
-			if (zf.slide==zf.slideMax-1) {
-				$(this).addClass('last');
-			};
-			$this=zf.$tweetBlock.find('#bloc_tweet .ctn ul>li');
-			zf.$tweetBlock.find('.tweet_time').css('position','relative');
-			$this.animate({'left':-zf.left*zf.slide+'px'});
-			$this.find('.tweet_time').eq(zf.slide).hide();
-			$this.find('.tweet_time').eq(zf.slide-1).stop(true,false).animate({'left':zf.left+'px',opacity:0},function() {
-				$(this).css({left:0,opacity:1});
-				$this.find('.tweet_time').eq(zf.slide).fadeIn();
-			})
-		}
-	});
-	$('#twitter_nav .previous').click(function(event) {
-		event.preventDefault();
-		if (zf.slide>=1) {
-			zf.slide--;
-			$(this).siblings('.next').removeClass('last');
-			if (zf.slide==0) {
-				$(this).removeClass('no-first');
-			};
-			$this=zf.$tweetBlock.find('#bloc_tweet .ctn ul>li');
-			zf.$tweetBlock.find('.tweet_time').css('position','relative');
-			$this.animate({'left':-zf.left*zf.slide+'px'});
-			$this.find('.tweet_time').eq(zf.slide).hide()
-			$this.find('.tweet_time').eq(zf.slide+1).stop(true,false).animate({'left':-zf.left+'px',opacity:0},function() {
-				$(this).css({left:0,opacity:1});
-				$this.find('.tweet_time').eq(zf.slide).fadeIn();
-			})
-		}
-	});
-	
-	zf.$tweetBlock.find("#bloc_tweet .ctn").tweet({
-		username: "clapps_fr",
-		join_text: "auto",
-		count: zf.slideMax,
-		loading_text: "Chargement...",
-		template: "{text} {time}"
-	});
-};
-
+zf.displayTrame = function() {
+	if(zf.$page.find('#first_part .slider_frame').css('display')=="none"){
+		setTimeout(function(){
+			if(zf.$page.find('#first_part .slider_frame').css('display')=="none"){
+				zf.$page.find('#first_part .slider_frame').fadeIn(300); 
+			}
+		}, 500);
+	}
+	zf.rAFDisplayTrame = requestAnimationFrame(zf.displayTrame);
+}; 
 
 zf.initContact = function() {
-	
-	// detecte ie 7&8
-	if ( $.browser.msie ) {
-		$ie=parseInt($.browser.version, 10); 
-		if($ie<=9){
-			zf.fixPlaceholder(); 
-		}
-	}
-	
+
 	// variables
 	zf.$contact = $('#contact');
 	$msg=zf.$contact.find("#formMsg");
@@ -393,21 +386,20 @@ zf.initContact = function() {
 	
 	// animation to select contact
 	zf.$contact.on('click','#leftCol a',function(event){
-		event.preventDefault();
 		// set variable
 		$this=$(this);
+		$actif=zf.$contact.find("#leftCol li.active a");
 		if($this.parent().hasClass('active')){
 			return false; 
 		}
-		$actif=zf.$contact.find("#leftCol li.active a");
 		// reset animation
-		$actif.animate({
+		zf.$contact.find("#leftCol li a").stop().animate({
 			'left': '-20'
 		}, 300, function() {
 			$actif.parent().removeClass('active'); 
 		});
 		// new animation
-		$this.animate({
+		$this.stop().animate({
 			'left': '0'
 		}, 300, function() {
 			$this.parent().addClass('active');
@@ -415,22 +407,15 @@ zf.initContact = function() {
 		// change value of input email
 		zf.$emailTo=$this.attr('name');
 		zf.$contact.find("#contactActif").attr('value', zf.$emailTo);
+		return false;
 	});
 	
 	// ajax to send email
-	zf.$contact.on('submit', 'form', function() {
-		
+	zf.$contact.on('submit', 'form', function(){
 		$this=$(this);
-		
-		// fix ie pour "desactive button au survol"
-		if($this.find('#sendEmailButton').attr('disabled')=="disabled"){
-			return false; 
-		}
-		// desactive button au click 
 		$this.find('#sendEmailButton').attr('disabled', 'disabled');
-		
-		// reset message 
 		$msg.removeClass('error').removeClass('good').html(' ').hide();
+		
 		// variables 
 		$objet = zf.$contact.find('#objetField');
 		$nom = zf.$contact.find('#nomField');
@@ -460,7 +445,6 @@ zf.initContact = function() {
 			$contenu.addClass('error').parent().find('span').addClass('error');
 			$error=true;
 		}
-		
 		if($error==true){
 			$this.find('#sendEmailButton').removeAttr("disabled");
 			return false;
@@ -487,11 +471,12 @@ zf.initContact = function() {
 				$this.find('#sendEmailButton').removeAttr("disabled");
 			}
 		});
+		
 		return false;
 	});
 	
 	// reset field error
-	zf.$contact.on('keyup','form p .field.error',function(event){
+	zf.$contact.on('keyup','form div .field.error',function(event){
 		$this=$(this);
 		if((!$this.hasClass('email'))||(zf.isValidEmail($this.val()))){
 			$(this).removeClass('error').parent().find('span').removeClass('error');
@@ -503,172 +488,179 @@ zf.initContact = function() {
 
 zf.initNewsletter = function(){
 	
-	// detecte ie 7&8
-	if ( $.browser.msie ) {
-		$ie=parseInt($.browser.version, 10); 
-		if($ie<=9){
-			zf.fixPlaceholder(); 
-		}
-	}
-	
 	// variables
 	zf.$update = $('#confirmation');
-	zf.$unsubscribe = $('#desinscription');
-	
-	// Si c'est un update, on met à jour les fields
-	if(zf.$isUpdate==true){
-		if(zf.getUrlVars()["f"]!=null){
-			zf.$update.find('#firstnameField').val(zf.getUrlVars()["f"]);
-		}
-		if(zf.getUrlVars()["l"]!=null){
-			zf.$update.find('#lastnameField').val(zf.getUrlVars()["l"]);
-		}
-		if(zf.getUrlVars()["j"]!=null){
-			zf.$update.find('#jobField').val(zf.getUrlVars()["j"]);
-		}
-	}
+//	zf.$unsubscribe = $('#desinscription');
     
 	// ecoute de l'inscription à la newsletter
 	zf.$page.on('submit', '#formSubscribe', function() {
 		// initialisation
-		$this=$(this);
+		$form=$(this);
 		$('#error_subscribe').html('');
 		zf.$userEmail = zf.$page.find('#emailNewsletter').val();
-		// fix ie pour "desactive button au survol"
-		if($this.find('#buttonNewsletter').attr('disabled')=="disabled"){
-			return false; 
-		}
-		// desactive button au click 
-		$this.find('#buttonNewsletter').attr('disabled', 'disabled');
-		// verification de la validité de l'email
+
 		if((zf.$userEmail=="")||(zf.$userEmail=="votreadresse@email.com")||(!zf.isValidEmail(zf.$userEmail))){
-			$('#error_subscribe').html("Votre email n'est pas valide").fadeIn('slow');
-			$this.find('#buttonNewsletter').removeAttr("disabled");
+			$('#error_subscribe').html("Votre email n'est pas valide !").fadeIn('slow');
+			$("#first_part").find("form button").fadeIn(100);
 			return false; 
 		}
-		// envoi des données en ajax
-		$.ajax({
-			url: $this.attr('action'),
-			type: $this.attr('method'),
-			data: $this.serialize(),
-			dataType: 'json',
-			success: function(json) {
-				$.fancybox.open({
-					href: './popin/confirmSubscribe.php',
-					type: 'ajax',
-					closeClick  : false,
-					helpers   : { 
-						overlay : {closeClick: false}
-					},
-					afterShow: zf.initNewsletter
-				});
-				$this.find('#buttonNewsletter').removeAttr("disabled");
-				$this.find('#emailNewsletter').val('');
-				_gaq.push(['_trackPageview', '/confirmation']);
-			}, error: function(json) {
-				$('#error_subscribe').html(json.responseText);
-				$this.find('#buttonNewsletter').removeAttr("disabled");
-			} 
-		}); 
-		return false;
-	});
-	
-	// ecoute de la mise à jour de la newsletter
-	zf.$update.on('submit', '#formUpdate', function() {
-		//variables
-		$this=$(this);
-		$msg=zf.$update.find("#formMsg");
-		$msg.html(' ').removeClass('error').removeClass('good'); 
-		$firstname= $this.find('#firstnameField').attr('value');
-		$lastname= $this.find('#lastnameField').attr('value');
-		$job= $this.find('#jobField').attr('value');
 		
-		// association du get à l'email selectionné
-		if(zf.$isUpdate==true){
-			zf.$userEmail=zf.$getEmail;
-		}
-
-		// check email available
-		if((zf.$userEmail=="")||(zf.$userEmail=="votreadresse@email.com")||(!zf.isValidEmail(zf.$userEmail))){
-			$msg.html("Une erreur est survenue, veuillez recharger la page.");
-			return false; 
-		}
-		// fix ie remplissage des champ placeholder
-		if($firstname=="Votre prénom"){
-			$firstname="";
-		}
-		if($lastname=="Votre nom"){
-			$lastname="";
-		}
-		if($job=="Votre métier"){
-			$job="";
-		}
-		// requete ajax
-		$.ajax({
-			url: $this.attr('action'),
-			type: $this.attr('method'),
-			data: {
-				emailSelected: zf.$userEmail,
-				firstname: $firstname,
-				lastname: $lastname,
-				job: $job
-			},
-			dataType: 'json',
-			success: function(json) {
-				if(zf.$isUpdate==true){
-					$msg.html('Merci '+$firstname+', vos informations ont bien été mises à jour.').addClass('good');
-				}else{
-					$msg.html('Content de vous compter parmi nous '+$firstname).addClass('good');
-				}
-				zf.$update.find('.follow').show(); 
-			}, error: function(json) {
-				$msg.html(json.responseText).addClass('error');
-			} 
+		$form.find("button").fadeOut(100, function(){
+			setTimeout(function(){
+				$.ajax({
+					url: $form.attr('action'),
+					type: $form.attr('method'),
+					data: $form.serialize(),
+					dataType: 'json',
+					success: function(json) {
+						$.fancybox.open({
+							href: './popin/confirmSubscribe.php?p=comingSoon&e='+zf.$userEmail,
+							type: 'iframe',
+							closeClick  : false,
+							helpers   : { 
+								overlay : {closeClick: false}
+							}//,
+						//	afterShow: zf.initNewsletter
+						});
+						$("#first_part").find("form button").fadeIn(100);
+						zf.$page.find('#emailNewsletter').val('');
+						//	_gaq.push(['_trackPageview', '/confirmation']);
+					}, error: function(json) {
+						$('#error_subscribe').html(json.responseText);
+						$("#first_part").find("form button").fadeIn(100);
+					} 
+				});
+			}, 1000);
 		});
-		return false;
-	});
-	
-	// ecoute de la desinscription de la newsletter
-	zf.$unsubscribe.on('submit', '#formUnsubscribe', function() {
-		//variables
-		$this=$(this);
-		// fix ie pour "desactive button au survol"
-		if($this.find('input[type=submit]').attr('disabled')=="disabled"){
-			return false; 
-		}
-		// desactive button au click 
-		$this.find('input[type=submit]').attr('disabled', 'disabled');
-		// init
-		$msg=zf.$unsubscribe.find("#formMsg");
-		$msg.html(' ').removeClass('error').removeClass('good');
-		// check email available 
-		if((zf.$getEmail=="")||(!zf.isValidEmail(zf.$getEmail))){
-			$msg.html("Une erreur est survenue, veuillez recharger le lien fourni dans l'email de désinscription.");
-			$this.find('input[type=submit]').removeAttr("disabled");
-			return false; 
-		}
-		// requete ajax 
-	$.ajax({
-			url: $this.attr('action'),
-			type: $this.attr('method'),
-			data: {
-				emailSelected: zf.$getEmail,
-				message: $this.find('#contentField').attr('value')
-			},
-			dataType: 'json',
-			success: function(json) {
-				$msg.html('Vous avez été désinscrit avec succès.').addClass('good');
-				$this.find('input[type=submit]').removeAttr("disabled");
-			}, error: function(json) {
-				$msg.html(json.responseText).addClass('error');
-				$this.find('input[type=submit]').removeAttr("disabled");
-			} 
-		}); 
-
+		
 		return false;
 	});
 	
 };
+
+zf.changeJob = function(){
+	setTimeout(function(){
+		var choice = Math.floor(Math.random()*zf.jobs.length)
+		zf.$page.find('#intro h2 strong').shuffleLetters({
+				"text": zf.jobs[choice]
+		});
+		zf.changeJob();
+	}, 2500);
+};
+
+zf.initHeader = function(){
+	// nav control
+	zf.$page.on('click','header nav a',function(event){
+		// var
+		$link = $(this);
+		zf.navAnim = true;
+		// disable click if current menu 
+		if($link.parent().hasClass('current')){
+			return false;
+		}
+		// animation
+		var position = zf.$page.find($link.attr('href')).position().top;
+		$('body,html').animate({
+			scrollTop : position
+		},'slow', function(){
+			zf.navAnim = false;
+			$link.parents('nav').find('li.current').removeClass('current');
+			$link.parent('li').addClass('current');
+		});
+		return false;
+	});
+};
+
+zf.startSlider = function(){
+	zf.animSlider = setInterval(function(){
+		// display
+		$slides = $('#first_part').find('.slider .display');
+		$current = $('#first_part').find('.slider .display.current');
+		if($slides.last().hasClass('current')){
+			$next = $slides.first();
+		}else{
+			$next = $current.next();
+		}
+		$next.css({'z-index': 5});
+		$current.fadeOut(1200, function(){
+			$next.addClass('current').css({'z-index': 6});
+			$current.removeClass('current').css({'z-index': 4}).show();
+		});
+		//text
+		$('#first_part').find('.slider .desc.current').fadeOut(1200, function(){
+			$this = $(this);
+			$desc = $('#first_part').find('.slider .desc');
+			if($desc.last().hasClass('current')){
+				$desc.first().addClass('current').fadeIn(500);
+			}else{
+				$this.next().addClass('current').fadeIn(500);
+			}
+			$this.removeClass('current');
+		});
+		// control 
+		$control = $('#first_part').find('.slider .control');
+		$current_control = $('#first_part').find('.slider .control.current');
+		if($control.last().hasClass('current')){
+			$control.first().addClass('current');
+		}else{
+			$current_control.next().addClass('current');
+		}
+		$current_control.removeClass('current');
+	}, 10000);
+};
+
+
+zf.init = function(){
+	
+	// variables
+	zf.$body = $('body');
+	zf.$page = $('#page');
+	
+	// test js available
+	$('body').addClass('has-js');
+	
+	// Blank links
+	$('a[rel=external]').click(function(){
+		window.open($(this).attr('href'));
+		return false;
+	});
+	
+	// init 
+	zf.initHeader();
+	zf.initNewsletter();
+	zf.initContact();
+	zf.fixPlaceholder(zf.$page);
+	
+	// ajax content about
+	zf.$page.find('#about .about_content').load('content/about.php .text');
+	
+	// lancer animation about
+	zf.$page.on('click','#buttonAbout',function(event){
+		zf.$page.find('#first_part #intro').animate({
+			left:'-41.5%'
+		},300, function(){
+			zf.$page.find('#first_part #intro .text').hide();
+			if($('#first_part').width() < 1050){
+				zf.$page.find('#first_part #intro').hide();
+			}
+		});
+		return false;
+	});
+	
+	zf.$page.on('click','#buttonBackAbout',function(event){
+		zf.$page.find('#first_part #intro').show();
+		zf.$page.find('#first_part #intro').animate({
+			left:'0'
+		});
+		zf.$page.find('#first_part #intro .text').fadeIn('slow');
+		return false;
+	});
+	
+};
+
+
+/* TOOLS
+--------------------------------------------------------------------------------------------------------------------------------------*/
 
 zf.isValidEmail = function(emailAddress) {
     var pattern = new RegExp(/^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i);
@@ -683,15 +675,19 @@ zf.getUrlVars = function(){
     return vars;
 }
 
-zf.resize = function(callback) {
-	var $image = $('img.fond');
+zf.fixPlaceholder = function($conteneur) {	
+	$conteneur.find('input, textarea').placeholder();
+};
+
+zf.resizeSlider = function(callback) {
+	var $image = $('#first_part').find('.slider img');
 	var image_width = $image.width(); 
 	var image_height = $image.height();     
 	var over = image_width / image_height; 
 	var under = image_height / image_width; 
 
-	var body_width = $(window).width(); 
-	var body_height = $(window).height(); 
+	var body_width = $('#first_part .slider').width(); 
+	var body_height = $('#first_part .slider').height(); 
 
 	if (body_width / body_height >= over) { 
 		$image.css({ 
@@ -711,79 +707,8 @@ zf.resize = function(callback) {
 	if(callback){callback();}
 };
 
-zf.fixPlaceholder = function() {
-	$('input[placeholder]').each(function(){  
-		var input = $(this);        
-		$(input).val(input.attr('placeholder'));
-		$(input).focus(function(){
-			if (input.val() == input.attr('placeholder')) {
-				input.val('');
-			}
-		});
-		$(input).blur(function(){
-			if (input.val() == '' || input.val() == input.attr('placeholder')) {
-				input.val(input.attr('placeholder'));
-			}
-		});
-	});
-	$('textarea[placeholder]').each(function(){  
-		var input = $(this);        
-		$(input).val(input.attr('placeholder'));
-		$(input).focus(function(){
-			if (input.val() == input.attr('placeholder')) {
-				input.val('');
-			}
-		});
-		$(input).blur(function(){
-			if (input.val() == '' || input.val() == input.attr('placeholder')) {
-				input.val(input.attr('placeholder'));
-			}
-		});
-	});
-};
-
-zf.closeOverlay = function() {
-    $.fancybox.close();
-};
-
-zf.init = function(){
-	
-	// variables
-	zf.$body = $('body');
-	zf.$page = $('#container>.ctn');
-	
-	// test js available
-	$('body').addClass('has-js');
-	
-	// Reset form focus
-	$('.reset-focus').focus(function(){
-		if($(this).attr('value') == this.defaultValue) $(this).attr('value', '');
-	}).blur(function(){
-		if($.trim(this.value) == '') this.value = (this.defaultValue ? this.defaultValue : '');
-	});
-	
-	// Blank links
-	$('a[rel=external]').click(function(){
-		window.open($(this).attr('href'));
-		return false;
-	});
-	
-	// init fonctionnalités
-	zf.initTweet();
-	zf.initNewsletter();
-	zf.$body.find(".content_overlay").fancybox();
-	zf.$body.find(".contact_overlay").fancybox({
-		afterShow: zf.initContact
-	});
-	
-	// get url variables
-	zf.$getEmail= zf.getUrlVars()["e"];
-	zf.$getType= zf.getUrlVars()["m"];
-	
-};
-
 /* DOM READY
 --------------------------------------------------------------------------------------------------------------------------------------*/
 
 $(document).ready(zf.init);
-$(window).load(zf.displayIntro);
+$(window).load(zf.initDisplay);

@@ -116,15 +116,38 @@ body{
 }
 
 #container h1 #logo {
-	width: 137px; 
-	height: 86px;
+	width: 111px; 
+	height: 80px;
 	margin: 0 auto 30px;
-	background: no-repeat url('../images/logo.png');
+	background: no-repeat url('../images/logo_clapps.png');
 	text-indent: -9999px;
 	display: block;
 }
 
 #container p {
-	margin-top: 30px 20px 0 20px;
+	margin-top: 30px 20px 25px 20px;
 	text-align: center;
 }
+
+#container p span {
+	display: block;
+	font-weight: bold;
+	padding-bottom: 15px;
+}
+
+#container a {
+	display: block;
+	text-indent: -9999px;
+	width: 165px;
+	height: 33px;
+	margin: 20px auto;
+}
+
+#container a.fb {
+	background: no-repeat url('../images/button_facebook.png');
+}
+
+#container a.twitter {
+	background: no-repeat url('../images/button_twitter.png');
+}
+

@@ -1,0 +1,159 @@
+
+{"jobs": [
+	{
+		"name": "Acteur ?",
+		"priority": 1
+	},
+	{
+		"name": "Figurant ?",
+		"priority": 3
+	},
+	{
+		"name": "Batman ?",
+		"priority": 3
+	},
+	{
+		"name": "le bienvenu !",
+		"priority": 5
+	},
+	{
+		"name": "Assistant Opérateur Son ?",
+		"priority": 1
+	},
+	{
+		"name": "Monteur son ?",
+		"priority": 1
+	},
+	{
+		"name": "Opérateur son ?",
+		"priority": 2
+	},
+	{
+		"name": "Perchman ?",
+		"priority": 3
+	},
+	{
+		"name": "Sonorisateur ?",
+		"priority": 1
+	},
+	{
+		"name": "Technicien audiovisuel ?",
+		"priority": 4
+	},
+	{
+		"name": "Opérateur Image ?",
+		"priority": 2
+	},
+	{
+		"name": "Chef Machiniste ?",
+		"priority": 3
+	},
+	{
+		"name": "Opérateur Steadicam ?",
+		"priority": 4
+	},
+	{
+		"name": "Etalonneur ?",
+		"priority": 3
+	},
+	{
+		"name": "Assistant Réalisation ?",
+		"priority": 1
+	},
+	{
+		"name": "Réalisateur ?",
+		"priority": 7
+	},
+	{
+		"name": "Metteur en Scène ?",
+		"priority": 6
+	},
+	{
+		"name": "Scripte ?",
+		"priority": 4
+	},
+	{
+		"name": "Voix-off ?",
+		"priority": 6
+	},
+	{
+		"name": "Doubleur ?",
+		"priority": 8
+	},
+	{
+		"name": "Décorateur ?",
+		"priority": 5
+	},
+	{
+		"name": "Régisseur ?",
+		"priority": 4
+	},
+	{
+		"name": "Maquilleur ?",
+		"priority": 5
+	},
+	{
+		"name": "Magasinier ?",
+		"priority": 5
+	},
+	{
+		"name": "Repéreur ?",
+		"priority": 4
+	},
+	{
+		"name": "Chargé de casting ?",
+		"priority": 4
+	},
+	{
+		"name": "Cascadeur ?",
+		"priority": 4
+	},
+	{
+		"name": "Directeur Plateau ?",
+		"priority": 1
+	},
+	{
+		"name": "Monteur ?",
+		"priority": 7
+	},
+	{
+		"name": "Scénariste ?",
+		"priority": 6
+	},
+	{
+		"name": "Caméraman ?",
+		"priority": 6
+	},
+	{
+		"name": "Cadreur ?",
+		"priority": 7
+	},
+	{
+		"name": "Chef Lumière ?",
+		"priority": 3
+	},
+	{
+		"name": "Eclairagiste ?",
+		"priority": 3
+	},
+	{
+		"name": "Mécène ?",
+		"priority": 4
+	},
+	{
+		"name": "Producteur ?",
+		"priority": 5
+	},
+	{
+		"name": "Diffuseur ?",
+		"priority": 3
+	},
+	{
+		"name": "Distributeur ?",
+		"priority": 3
+	},
+	{
+		"name": "Comédien ?",
+		"priority": 4
+	}
+]}

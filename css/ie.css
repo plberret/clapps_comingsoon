@@ -19,3 +19,11 @@ input[type=submit], input[type=submit]:active, input[type=submit]:focus, input[t
 	text-shadow: 0 !important;
 	
 }
+
+section#first_part #about .content {
+	background: #111111 url('../images/bg_black.png') repeat;
+}
+
+section#first_part #intro .content {
+	background: #171717 url('../images/bg_grey.png') repeat;
+}

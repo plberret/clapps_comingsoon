@@ -90,7 +90,7 @@
 }
 
 .fancybox-close {
-	position: absolute;
+	position: fixed;
 	top: 18px;
 	right: 25px;
 	width: 16px;
@@ -168,7 +168,8 @@
 	overflow: auto !important;
 	display: none;
 	z-index: 8010;
-	background: url('fancybox_bg.png');
+	background: #0f0f0f;
+	background-color: rgba(15, 15, 15, 0.98);
 }
 
 .fancybox-overlay-fixed {
