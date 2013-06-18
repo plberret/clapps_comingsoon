@@ -88,7 +88,7 @@
 								</p>
 								<p>Accroître votre visibilité et mettre en avant vos compétences, étoffer votre carnet d’adresses et trouver de nouvelles collaborations seront autant de fonctionnalités qui s’offriront à vous. </p>
 								<p>Clapps mettra à votre disposition les outils adaptés à votre profil pour toutes les situations.</p>
-								<p><strong>Vos rêves se réaliseront à partir de mai 2013 !</strong></p>
+								<p><strong>Vos rêves se réaliseront prochainement !</strong></p>
 							</div>
 							<a href="#" id="buttonAbout">En savoir +</a>
 							<form action="requests/listSubscribe.php" method="post" id="formSubscribe" >
@@ -164,7 +164,7 @@
 				<div class="bg"></div>
 				<div class="second_content content">
 					<div class="title">
-						<h2>En attendant la sortie du site <span>Mai 2013</span>,<br/> 
+						<h2>En attendant la sortie du site,<br/> 
 						Clapps vous présente son <span>application Facebook</span></h2>
 					</div>
 					<img src="images/display_appli.png" alt="" />

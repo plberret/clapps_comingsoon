@@ -422,7 +422,7 @@ section#first_part #intro .text form .field {
 section#first_part #intro .text form .field input[type=text] {
 	display: block;
 	font-size: 14px;
-	color: #cdcdcd;
+	color: #111;
 	height: 17px;
 	width: 63%;
 	padding: 10px 35% 10px 2%;
@@ -431,6 +431,19 @@ section#first_part #intro .text form .field input[type=text] {
 	border-radius: 5px;
 	background: #fff url('../images/loader.gif') no-repeat 98% center;
 	border: solid 1px #212121;
+}
+
+section#first_part #intro .text form .field input::-webkit-input-placeholder {
+	color: #111;
+}
+section#first_part #intro .text form .field input:-moz-placeholder {
+	color: #111;
+}
+section#first_part #intro .text form .field input::-moz-placeholder {
+	color: #111;
+}
+section#first_part #intro .text form .field input:-ms-input-placeholder {
+	color: #111;
 }
 
 section#first_part #intro .text form .field input[type=submit],
